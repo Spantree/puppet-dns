@@ -31,4 +31,12 @@ class dns::server::config {
     content => "// File managed by Puppet.\n"
   }
 
+  file { '/etc/bind/named.conf.options':
+    ensure => present,
+    owner  => 'bind',
+    group  => 'bind',
+    mode   => '0644',
+    source => "puppet:///modules/${module_name}/named.conf.options",
+  }
+
 }
