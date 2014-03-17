@@ -1,12 +1,12 @@
 # Puppet DNS (BIND9) Module
 
+[![Build Status](https://travis-ci.org/ajjahn/puppet-dns.png)](https://travis-ci.org/ajjahn/puppet-dns)
+
 Module for provisioning DNS (bind9)
 
 Tested on Ubuntu 12.04, patches to support other operating systems are welcome.
 
-This module depends on concat (https://github.com/ripienaar/puppet-concat).
-
-Note: This module has moved on PuppetForge to [http://forge.puppetlabs.com/ajjahn/dns](http://forge.puppetlabs.com/ajjahn/dns). All future releases can be found there.
+This module depends on concat (https://github.com/puppetlabs/puppet-concat).
 
 ## Installation
 
@@ -25,17 +25,22 @@ Tweak and add the following to your site manifest:
     node 'server.example.com' {
       include dns::server
 
+      # Forwarders
+      dns::server::options{ '/etc/bind/named.conf.options':
+        forwarders => [ '8.8.8.8', '8.8.4.4' ]
+      }
+
       # Forward Zone
       dns::zone { 'example.com':
-        soa => "ns1.example.com",
-        soa_email => 'admin.example.com',
+        soa         => "ns1.example.com",
+        soa_email   => 'admin.example.com',
         nameservers => ["ns1"]
       }
 
       # Reverse Zone
       dns::zone { '1.168.192.IN-ADDR.ARPA':
-        soa => "ns1.example.com",
-        soa_email => 'admin.example.com',
+        soa         => "ns1.example.com",
+        soa_email   => 'admin.example.com',
         nameservers => ["ns1"]
       }
 
@@ -50,32 +55,47 @@ Tweak and add the following to your site manifest:
         'luey':
           zone => 'example.com',
           data => ["192.168.1.25"],
-          ptr => true; # Creates a matching reverse zone record.  Make sure you've added the proper reverse zone in the manifest.
+          ptr  => true; # Creates a matching reverse zone record.  Make sure you've added the proper reverse zone in the manifest.
       }
 
       # MX Records:
       dns::record::mx {
         'mx,0':
-          zone => 'example.com',
+          zone       => 'example.com',
           preference => 0,
-          data => 'ASPMX.L.GOOGLE.com';
+          data       => 'ASPMX.L.GOOGLE.com';
         'mx,10':
-          zone => 'example.com',
+          zone       => 'example.com',
           preference => 10,
-          data => 'ALT1.ASPMX.L.GOOGLE.com';
+          data       => 'ALT1.ASPMX.L.GOOGLE.com';
       }
 
       # CNAME Record:
-      dns::record::cname {'www':
+      dns::record::cname { 'www':
         zone => 'example.com',
         data => 'huey.example.com',
       }
 
       # TXT Record:
-      dns::record::txt {'www':
+      dns::record::txt { 'www':
         zone => 'example.com',
         data => 'Hello World',
       }
+    }
+
+### Exported resource patterns
+    node default {
+      # Other nodes export an A record for thier hostname
+      @@dns::record::a { $hostname: zone => $::domain, data => $::ipaddress, }
+    }
+    node 'ns1.xkyle.com' {
+      dns::zone { $::domain:
+        soa         => $::fqdn,
+        soa_email   => "admin.${::domain}",
+        nameservers => [ 'ns1' ],
+      }
+      # Collect all the records from other nodes
+      Dns::Record::A <<||>>
     }
 
 ## Contributing
@@ -85,6 +105,13 @@ Tweak and add the following to your site manifest:
 3. Commit your changes (`git commit -am 'Added some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
+
+## Authors
+
+Note: This module is a merge of the work from the following authors:
+* [ajjahn](https://github.com/ajjahn/puppet-dns)
+* [Danzilio](https://github.com/danzilio)
+* [solarkennedy](https://github.com/solarkennedy)
 
 ## License
 

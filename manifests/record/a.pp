@@ -15,11 +15,11 @@ define dns::record::a (
   }
 
   if $ptr {
-    $ip = inline_template('<%= data.kind_of?(Array) ? data.first : data %>')
-    $reverse_zone = inline_template('<%= ip.split(".")[0..-2].reverse.join(".") %>.IN-ADDR.ARPA')
-    $rrfqdn = inline_template('<%= ip.split(".").reverse.join(".") %>.IN-ADDR.ARPA')
+    $ip = inline_template('<%= @data.kind_of?(Array) ? @data.first : @data %>')
+    $reverse_zone = inline_template('<%= @ip.split(".")[0..-2].reverse.join(".") %>.IN-ADDR.ARPA')
+    $octet = inline_template('<%= @ip.split(".")[-1] %>')
 
-    dns::record::ptr { $rrfqdn:
+    dns::record::ptr { $octet:
       zone => $reverse_zone,
       data => "${host}.${zone}"
     }
